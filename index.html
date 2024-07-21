@@ -5,6 +5,7 @@
 <head>
 	<title>Seedfinder Genotyper</title>
 	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+	<meta name="seedfinderverification" content="Open Sesame!" />
 	<style>
 		label {
 			background-color: #EEEEEE;
@@ -48,6 +49,7 @@
 					distinguish_breeder: true,
 					group: true,
 				},
+				nodes: {},
 				
 				fetchParentWalk: function  (node, factor, order, pass=null) {
 					let url  = `https://en.seedfinder.eu/api/json/strain.json?br=${node.br}&str=${node.id}&lng=en&parents=1&ac=${api_token}`;
@@ -88,7 +90,7 @@
 								else if ( p.info.includes ('bbb') )
 								{
 									let pr2 = {id: p2.id, br: p2.brid};
-									if (p.info == 'aaa x bbb' || p.info == 'bbb x  aaa') {
+									if (p.info == 'aaa x bbb' || p.info == 'bbb x aaa') {
 										await this.fetchParentWalk (pr1, factor * 0.5, order + 1);
 										await this.fetchParentWalk (pr2, factor * 0.5, order + 1);
 										resolve (true);
@@ -334,7 +336,7 @@
 										justify-content: space-between;
 										flex-wrap: wrap;"
 								 :style="{width: `${r[1].amount * 100}%`, 'background-color': colors[ri % colors.length]}"
-								 :title="`${r[0].split ('__')[0]} ${settings.show_breeder ? '(' + r[0].split ('__')[1] + ')' : ''} ${Math.round (r[1].amount * 100 * 100) / 100} %`">
+								 :title="`${r[0].split ('__')[0]} ${settings.distinguish_breeder ? '(' + r[0].split ('__')[1] + ')' : ''} ${Math.round (r[1].amount * 100 * 100) / 100} %`">
 									<span x-html="r[0].split ('__')[0]"></span>
 									<span x-show="settings.distinguish_breeder" x-html="`(${r[0].split ('__')[1]})`"></span>
 									<span x-html="`${Math.round (r[1].amount * 100 * 100) / 100}%`"></span>
