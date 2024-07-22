@@ -113,12 +113,12 @@
 						else if ( p.info.includes ('bbb') )
 						{
 							let pr2 = {id: p2.id, br: p2.brid};
-							if (p.info == 'aaa x bbb' || p.info == 'bbb x aaa' || p.info == 'bbb x  aaa') {
+							if ( ['aaa x bbb', 'bbb x aaa', 'bbb x  aaa'].includes (p.info) ) {
 								await this.fetch (pr1, factor * 0.5, order + 1);
 								await this.fetch (pr2, factor * 0.5, order + 1);
 								return;
 							}
-							else if (p.info == '{aaa x bbb} x aaa') {
+							else if ( ['{aaa x bbb} x aaa', 'aaa x {aaa x bbb}'].includes (p.info) ) {
 								await this.fetch (pr1, factor * 0.25, order + 2 );
 								await this.fetch (pr2, factor * 0.25, order + 2);
 								await this.fetch (pr1, factor * 0.5, order + 1 );
