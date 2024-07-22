@@ -60,8 +60,8 @@
 						{
 							console.log (`fetch ${url}`);
 							const result = await fetch (url)
-											   .then(response => response.json());;
-							this.nodes[`${node.id}__${node.br}`] = {id: result.id, br: node.br, parents: node.parents, brinfo: node.brinfo};
+											   .then(response => response.json());
+							this.nodes[`${node.id}__${node.br}`] = {id: result.id, br: result.br, parents: result.parents, brinfo: result.brinfo};
 							localStorage.setItem ( 'nodes', JSON.stringify (this.nodes) );
 								
 							console.log (`walk ${node.id}__${node.br}`);
@@ -187,8 +187,6 @@
 					}
 					else {
 						let node = {id: groups[1], br: groups[2]};
-						//let node = {id: 'Shiva_Skunk', br: 'Sensi_Seeds'}
-						//console.log (node, groups);
 						this.run (node);
 					}
 				}, 
@@ -277,9 +275,6 @@
 					}
 					else {
 						this.result = this.raw_result;
-						for (let r of this.result) { 
-							console.log (r[0])
-						};
 					}
 				},
 				
@@ -313,8 +308,7 @@
 					   @change="if (result != null) grouping();" />
 				group results
 			</label>
-			<input type="text" x-model="filter" placeholder="filter, e.g. &quot;indica&quot;" />
-			<span x-html="filter" />
+			<input type="text" x-model="filter" :disabled="result == null" placeholder="filter, e.g. &quot;indica&quot;" />
 		</div>
 		<button @click="process()" type="button" style="margin-top: 0.2rem;">Fetch</button>
 	</div>
@@ -336,31 +330,32 @@
 				<template x-for="(group, g) in result" :key="g">
 					<div style="width: 100%; display: flex;">
 						<template x-for="(r, ri) in group" :key="ri">
-							<div style="padding: 1rem;
-										margin: 0.2rem;
-										text-align: center;
-										height: 2rem; 
-										text-overflow: hidden;
-										overflow: hidden;
-										font-size: 100%;
-										display: flex;
-										align-items: center;
-										justify-content: space-between;
-										flex-wrap: wrap;"
-								 :style="{width: `${r[1].amount * 100}%`, 'background-color': colors[ri % colors.length]}"
-								 :title="`${r[0].split ('__')[0]} ${settings.distinguish_breeder ? '(' + r[0].split ('__')[1] + ')' : ''} ${Math.round (r[1].amount * 100 * 100) / 100} %`">
-									<span x-html="r[0].split ('__')[0]"></span>
-									<span x-show="settings.distinguish_breeder" x-html="`(${r[0].split ('__')[1]})`"></span>
-									<span x-html="`${Math.round (r[1].amount * 100 * 100) / 100}%`"></span>
-								 </div>
+							<template x-if="r[0].toLowerCase().includes ( filter.toLowerCase() )">
+								<div style="padding: 1rem;
+											margin: 0.2rem;
+											text-align: center;
+											height: 2rem; 
+											text-overflow: hidden;
+											overflow: hidden;
+											font-size: 100%;
+											display: flex;
+											align-items: center;
+											justify-content: space-between;
+											flex-wrap: wrap;"
+									 :style="{width: `${r[1].amount * 100}%`, 'background-color': colors[ri % colors.length]}"
+									 :title="`${r[0].split ('__')[0]} ${settings.distinguish_breeder ? '(' + r[0].split ('__')[1] + ')' : ''} ${Math.round (r[1].amount * 100 * 100) / 100} %`">
+										<span x-html="r[0].split ('__')[0]"></span>
+										<span x-show="settings.distinguish_breeder" x-html="`(${r[0].split ('__')[1]})`"></span>
+										<span x-html="`${Math.round (r[1].amount * 100 * 100) / 100}%`"></span>
+									 </div>
+							</template>
 						</template>
 					</div>
 				</template>
 			</template>
-			<span x-html="JSON.stringify (result)"></span>
 			<template x-if="!settings.group && result != null">
 				<template x-for="(r, ri) in result" :key="ri">
-					<template x-if="r != null && r[0].toLowerCase().includes ( filter.toLowerCase() )">
+					<template x-if="Array.isArray (r) && r.length > 0 && r[0].toLowerCase != null && r[0].toLowerCase().includes ( filter.toLowerCase() )">
 						<div style="padding-top: 1rem;
 								padding-bottom: 1rem;
 								margin: 0.2rem;
