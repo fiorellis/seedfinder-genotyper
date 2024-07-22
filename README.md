@@ -1,4 +1,4 @@
-# Seedfinder Gentotyper
+# Seedfinder Genotyper
 
 Computes the genetic composition of a given cannabis strain using seedfinder.eu
 
