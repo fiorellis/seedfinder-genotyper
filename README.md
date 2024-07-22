@@ -1,3 +1,5 @@
-Computes percentage amounts of a given strain for each ancestor
+# Seedfinder Genotyper
 
-Try it online: https://github.com/fiorellis/seedfinder-genotyper.git
+Computes the genetic composition of a given cannabis strain using seedfinder.eu
+
+Try it online: https://fiorellis.github.io/seedfinder-genotyper/
