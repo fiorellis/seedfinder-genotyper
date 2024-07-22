@@ -67,6 +67,13 @@
 							console.log (`fetch ${url}`);
 							const result = await fetch (url)
 											   .then(response => response.json());
+							if ( !('id' in result && 'name' in result && 'br' in result && 'brinfo' in result) )
+							{
+								this.error = 'got invalid response from seedfinder. Your entered URL might be wrong';
+								resolve (false);
+								return;
+							}
+							
 							this.nodes[`${node.id}__${node.br}`] = {id: result.id, name: result.name, br: result.br, parents: result.parents, brinfo: {id: result.brinfo.id, name: result.brinfo.name}};
 							localStorage.setItem ( 'nodes', JSON.stringify (this.nodes) );
 								
