@@ -45,6 +45,11 @@
 	<script src="https://unpkg.com/alpinejs" defer></script>
 	<script src="api_token.js"></script>
 	<script>
+		if ( localStorage.getItem ('updated') == null || Number ( localStorage.getItem ('updated') ) < 1722021389035 ) {
+			localStorage.clear();
+			localStorage.setItem ('updated', 1722021389036);
+		}
+		
 		function App() {
 			return {
 				strains: {},
@@ -67,14 +72,14 @@
 							console.log (`fetch ${url}`);
 							const result = await fetch (url)
 											   .then(response => response.json());
-							if ( !('id' in result && 'name' in result && 'br' in result && 'brinfo' in result) )
+							if ( !('id' in result && 'name' in result && 'brinfo' in result) )
 							{
 								this.error = 'got invalid response from seedfinder. Your entered URL might be wrong';
 								resolve (false);
 								return;
 							}
 							
-							this.nodes[`${node.id}__${node.br}`] = {id: result.id, name: result.name, br: result.br, parents: result.parents, brinfo: {id: result.brinfo.id, name: result.brinfo.name}};
+							this.nodes[`${node.id}__${node.br}`] = {id: result.id, name: result.name, br: result.brinfo.name, parents: result.parents, brinfo: {id: result.brinfo.id, name: result.brinfo.name}};
 							localStorage.setItem ( 'nodes', JSON.stringify (this.nodes) );
 								
 							console.log (`walk ${node.id}__${node.br}`);
