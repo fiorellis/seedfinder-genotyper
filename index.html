@@ -1,6 +1,5 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html>
 
 <head>
 	<title>Seedfinder Genotyper</title>
@@ -42,6 +41,7 @@
 		} 
 	
 	</style>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
 	<script src="https://unpkg.com/alpinejs" defer></script>
 	<script src="api_token.js"></script>
 	<script>
@@ -112,9 +112,12 @@
 					this.strains[strain_key].order = Math.max (order, this.strains[strain_key].order);
 					
 					if (p) {
+						p.info = p.info.replace(/ +(?= )/g, '');
+						
 						let p1 = p.strains.aaa;
 						let p2 = p.strains.bbb;
 						let p3 = p.strains.ccc;
+						let p4 = p.strains.ddd;
 						
 						let pr1 = {id: p1.id, br: p1.brid};
 						
@@ -125,7 +128,7 @@
 						else if ( p.info.includes ('bbb') )
 						{
 							let pr2 = {id: p2.id, br: p2.brid};
-							if ( ['aaa x bbb', 'bbb x aaa', 'bbb x  aaa'].includes (p.info) ) {
+							if ( ['aaa x bbb', 'bbb x aaa', 'bbb x aaa'].includes (p.info) ) {
 								await this.fetch (pr1, factor * 0.5, order + 1);
 								await this.fetch (pr2, factor * 0.5, order + 1);
 								return;
@@ -140,7 +143,7 @@
 							else if ( p.info.includes ('ccc') ) {
 								let pr3 = {id: p3.id, br: p3.brid};
 								
-								if (p.info == 'aaa x bbb x ccc') {
+								if ( ['aaa x bbb x ccc', 'aaa x ccc x bbb', 'bbb x aaa x ccc', 'bbb x ccc x aaa', 'ccc x aaa x bbb', 'ccc x bbb x aaa'].includes (p.info) ) {
 									// Not sure what this means, let's say 1/3 each, even if
 									// it does not make sense
 									await this.fetch (pr1, factor * 1/3, order + 1);
@@ -148,7 +151,7 @@
 									await this.fetch (pr3, factor * 1/3, order + 1);
 									return;
 								}
-								else if (p.info == 'aaa x {bbb x ccc}') {
+								else if ( ['aaa x {bbb x ccc}', 'aaa x {ccc x bbb}'].includes (p.info) ) {
 									await this.fetch (pr1, factor * 0.5, order + 1 );
 									await this.fetch (pr2, factor * 0.25, order + 2);
 									await this.fetch (pr3, factor * 0.25, order + 2 );
@@ -179,6 +182,18 @@
 									await this.fetch (pr3, factor * 0.25, order + 2 );
 									await this.fetch (pr1, factor * 0.25, order + 2 );
 									return;
+								}
+								else if ( p.info.includes ('ddd') ) {
+									let pr4 = {id: p4.id, br: p4.brid};
+									
+									if (p.info == 'aaa x bbb x ccc x ddd') {
+										await this.fetch (pr1, factor * 0.25, order + 1 );
+										await this.fetch (pr2, factor * 0.25, order + 1);
+										await this.fetch (pr3, factor * 0.25, order + 1 );
+										await this.fetch (pr4, factor * 0.25, order + 1 );
+										return;
+									}
+									
 								}
 							}
 							
@@ -305,7 +320,13 @@
 </head>
 
 <body x-data="App()">
-	<h1>Seedfinder Genotyper</h1>
+	<div style="display: flex; justify-content: space-between;">
+		<h1>
+			<i class="fa-solid fa-cannabis" style="color: #006708;"></i>
+			Seedfinder Genotyper
+		</h1>
+		<a href="seedfinder.eu"><img src="https://de.seedfinder.eu/pics/banner/seedfinder-code.png" /></a>
+	</div>
 	<div style="margin: 0xp auto; display: flex; justify-content: center; flex-direction: column;">
 		<input type="text"
 			   x-model="url"
@@ -326,13 +347,16 @@
 					   @change="if (result != null) grouping();" />
 				group results
 			</label>
-			<input type="text" x-model="filter" :disabled="result == null" placeholder="filter, e.g. &quot;indica&quot;" />
+			<input type="text" x-model="filter" :disabled="result == null" size="30" placeholder="filter, e.g. &quot;indica&quot;, &quot;skunk&quot; or &quot;haze&quot;" />
 		</div>
 		<button @click="process()" type="button" style="margin-top: 0.2rem;">Fetch</button>
 	</div>
 	
 	<template x-if="error != null">
-		<div x-html="error" style="background-color: #C40D0A; padding: 0.5rem; border-radius: 0.5rem; margin: 0.5rem; color: white;"></div>
+		<div style="background-color: #C40D0A; padding: 0.5rem; border-radius: 0.5rem; margin: 0.5rem; color: white;">
+			<b>Error:</b>
+			<span x-html="error"></span>
+		</div>
 	</template>
 	
 	<template x-if="status != null && error == null">
