@@ -24,6 +24,7 @@
 			background-color: rgba(0,0,0,0.1);
 			border-radius: 0.5rem;
 			padding: 0.2rem;
+			margin: 0 0.2rem 0 0.2rem;
 		}
 		
 		.loader {
@@ -35,6 +36,13 @@
 			display: inline-block;
 			box-sizing: border-box;
 			animation: rotation 1s linear infinite;
+		}
+		
+		.settingGroup {
+			border: 2px solid  #E4E4E4; border-radius: 0.5rem;
+			padding: 0.2rem;
+			align-items: center;
+			display: flex;
 		}
 
 		@keyframes rotation {
@@ -64,7 +72,7 @@
 				status: null,
 				settings: {
 					distinguish_breeder: true,
-					group: true,
+					group: 'order',
 				},
 				filter: '',
 				nodes: JSON.parse ( localStorage.getItem ('nodes') || '{}' ),
@@ -88,11 +96,11 @@
 							this.nodes[`${node.id}__${node.br}`] = {id: result.id, name: result.name, br: result.brinfo.name, parents: result.parents, brinfo: {id: result.brinfo.id, name: result.brinfo.name}};
 							localStorage.setItem ( 'nodes', JSON.stringify (this.nodes) );
 								
-							console.log (`walk ${node.id}__${node.br}`);
+							console.log (`walk ${node.id}__${node.br} order ${order} factor ${factor}`);
 							await this.walk (this.nodes[`${node.id}__${node.br}`], factor, order, ignore);
 						}
 						else {
-							console.log (`walk cache ${node.id}__${node.br}`);
+							console.log (`walk cache ${node.id}__${node.br} order ${order} factor ${factor}`);
 							await this.walk (this.nodes[`${node.id}__${node.br}`], factor, order, ignore);
 						}
 						
@@ -166,6 +174,7 @@
 								}
 								else if ( ['aaa x {bbb x ccc}', 'aaa x {ccc x bbb}'].includes (p.info) ) {
 									await this.fetch (pr1, factor * 0.5, order + 1, _ignore );
+									await this.fetch (pr2, factor * 0.25, order + 2, _ignore);
 									await this.fetch (pr2, factor * 0.25, order + 2, _ignore);
 									await this.fetch (pr3, factor * 0.25, order + 2, _ignore );
 									return;
@@ -308,24 +317,52 @@
 					});
 				},
 				grouping: function () {
-					if (this.settings.group) {
+					if (this.settings.group == 'order') {
 						let groups = [];
 						for (let r of this.raw_result) {
 							if (groups[r[1].order] == null) {
 								groups[r[1].order] = [];
 							}
-							
-							groups[r[1].order].push (r);
+
+							groups[r[1].order].push (r[1]);
 						}
-						this.result = groups;
+						this.result = Object.entries (groups);
 					}
-					else {
-						this.result = this.raw_result;
+					else if (this.settings.group == 'breeder') {
+						let groups = {};
+						for (let r of this.raw_result) {
+							if (groups[r[1].brname] == null) {
+								groups[r[1].brname] = [];
+							}
+							
+							groups[r[1].brname].push (r[1]);
+						}
+						this.result = Object.entries (groups);
+					}
+					else if (this.settings.group == 'no') {
+						let result = {}
+						for (let r of this.raw_result) {
+							result[r[0]] = [r[1]];
+						}
+
+						result = Object.entries (result);
+						result.sort ( function (a, b) {
+							 return a[1][0].amount < b[1][0].amount ? 1 : -1;
+							});
+						this.result = result;
 					}
 				},
 				
-				colors: ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#ffffff', '#000000']
-			};
+				colors: ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#ffffff', '#000000'],
+				tooltip: null,
+				addTooltip: function (node, parent) {
+					let rect = parent.getBoundingClientRect();
+					this.tooltip = {node: node,
+									x: rect.left + window.scrollX,
+									y: rect.top + window.scrollY,
+									element: parent};
+				}
+			}
 		}
 		
 	</script>
@@ -349,21 +386,28 @@
 			   x-model="url"
 			   placeholder="enter strain url, e.g. https://de.seedfinder.eu/strain-info/Jack_Herer/Sensi_Seeds/"
 			   style="font-size: 1rem; padding: 0.2rem; border-radius: 0.5rem;" />
-		<div style="border: 2px solid  #E4E4E4; border-radius: 0.5rem; padding: 0.2rem; margin: 0.2rem;">
-			<label>
+		<div style="padding: 0.2rem; margin: 0.2rem; display: flex; justify-content: space-between;">
+			<label class="settingGroup">
 				<input type="checkbox"
 					   x-model="settings.distinguish_breeder"
 					   :disabled="status != null"
 					   @change="if (result != null) process();" />
 				distinguish breeder
 			</label>
-			<label>
-				<input type="checkbox"
-					   x-model="settings.group"
-					   :disabled="status != null"
-					   @change="if (result != null) grouping();" />
-				group results
-			</label>
+			<form class="settingGroup">
+				group by
+				<template x-for="g in [['no grouping', 'no'], ['order', 'order']]">
+					<label>
+						<input type="radio"
+							   x-model="settings.group"
+							   :value="g[1]"
+							   :disabled="status != null"
+							   @change="if (result != null) grouping();" />
+						<span x-html="g[0]"></span>
+					</label>
+				</template>
+			</form>
+			
 			<input type="text" x-model="filter" :disabled="result == null" size="30" placeholder="filter, e.g. &quot;indica&quot;, &quot;skunk&quot; or &quot;haze&quot;" />
 		</div>
 		<button @click="process()" type="button" style="margin-top: 0.2rem;">Fetch</button>
@@ -385,11 +429,13 @@
 	
 	<template x-if="result != null">
 		<div style="width: 100%;">
+			
 			<template x-if="settings.group">
-				<template x-for="(group, g) in result" :key="g">
+				<template x-for="[g, group] in result" :key="g">
 					<div style="width: 100%; display: flex;">
-						<template x-for="(r, ri) in group" :key="ri">
-							<template x-if="r[1].name.toLowerCase().includes ( filter.toLowerCase() )">
+						<!--<div x-html="g" style="width: 2rem;"></div>-->
+						<template x-for="(r, ri) in group" :key="ri">	
+							<template x-if="r.name.toLowerCase().includes ( filter.toLowerCase() )">
 								<div style="padding: 1rem;
 											margin: 0.2rem;
 											text-align: center;
@@ -400,22 +446,28 @@
 											display: flex;
 											align-items: center;
 											justify-content: space-between;
-											flex-wrap: wrap;"
-									 :style="{width: `${r[1].amount * 100}%`, 'background-color': colors[ri % colors.length]}"
-									 :title="`${r[1].name} ${settings.distinguish_breeder ? '(' + r[1].brname + ')' : ''} ${Math.round (r[1].amount * 100 * 100) / 100} %`">
-										<span x-html="r[1].name" class="textbox"></span>
+											flex-wrap: no-wrap;
+											container-type: inline-size;"
+									 :style="{width: `${r.amount * 100}%`,
+											 'background-color': colors[ri % colors.length],
+											 'font-size': `${ 40 / ( r.name.length + String (Math.round (r.amount * 100 * 100) / 100).length + 1 + (settings.distinguish_breeder ? r.brname.length + 2 : 0 ) ) }cqw`}"
+									 @mouseenter="addTooltip (r, $el)"
+									 @mouseleave="console.log (1, $event.relatedTarget?.className); tooltip = $event.relatedTarget?.className != 'tooltip' ? null : tooltip">
+										<span x-html="r.name"
+										      class="textbox"></span>
 										<span x-show="settings.distinguish_breeder"
-											  x-html="`(${r[1].brname})`"
+											  x-html="`(${r.brname})`"
 											  class="textbox"></span>
-										<span x-html="`${Math.round (r[1].amount * 100 * 100) / 100}%`"
+										<span x-html="`${Math.round (r.amount * 100 * 100) / 100}%`"
 											  class="textbox"></span>
-									 </div>
+
+								</div>
 							</template>
 						</template>
 					</div>
 				</template>
 			</template>
-			<template x-if="!settings.group && result != null">
+			<!--<template x-if="!settings.group && result != null">
 				<template x-for="(r, ri) in result" :key="ri">
 					<template x-if="Array.isArray (r) && r.length > 1 && r[1].name.toLowerCase != null && r[1].name.toLowerCase().includes ( filter.toLowerCase() )">
 						<div style="padding-top: 1rem;
@@ -433,8 +485,28 @@
 							<span x-html="`${Math.round (r[1].amount * 100 * 100) / 100}%`"></span>
 						 </div>
 					</template>
-				</template>
+				</template>-->
 			</template>
+		</div>
+	</template>
+	
+	<template x-if="tooltip != null">
+		<div style="position: absolute;
+					background-color: white;
+					border: 1px solid black;
+					padding: 1rem;
+					display: flex;
+					align-items: center;
+					"
+			  class="tooltip"
+			 :style="{left: `${tooltip.x}px`, top: `${tooltip.y}px`}"
+			 @mouseleave="console.log (1, $event.relatedTarget?.className); tooltip = $event.relatedTarget != tooltip.element ? null : tooltip">
+			<span x-html="tooltip.node.name" class="textbox"></span>
+			<span x-show="settings.distinguish_breeder"
+				  x-html="`(${tooltip.node.brname})`"
+				  class="textbox tooltip"></span>
+			<span x-html="`${Math.round (tooltip.node.amount * 100 * 100) / 100}%`"
+				  class="textbox tooltip"></span>
 		</div>
 	</template>
 </body>
