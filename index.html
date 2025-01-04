@@ -160,6 +160,13 @@
 								await this.fetch (pr1, factor * 0.5, order + 1, _ignore );
 								return;
 							}
+							else if (['{aaa x bbb} x {bbb x aaa}', '{bbb x aaa} x {aaa x bbb}'].includes (p.info) ) {
+								await this.fetch (pr1, factor * 0.25, order + 2, _ignore );
+								await this.fetch (pr2, factor * 0.25, order + 2, _ignore);
+								await this.fetch (pr1, factor * 0.25, order + 2, _ignore );
+								await this.fetch (pr2, factor * 0.25, order + 2, _ignore );
+								return;
+							}
 							
 							else if ( p.info.includes ('ccc') ) {
 								let pr3 = {id: p3.id, br: p3.brid};
